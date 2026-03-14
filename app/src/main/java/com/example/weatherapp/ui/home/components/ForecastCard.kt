@@ -14,10 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.weatherapp.data.model.ForecastItem
+import com.example.weatherapp.data.model.ForecastDisplayItem
 
 @Composable
-fun ForecastCard(item: ForecastItem) {
+fun ForecastCard(item: ForecastDisplayItem) {
     Box(
         modifier = Modifier
             .width(60.dp)

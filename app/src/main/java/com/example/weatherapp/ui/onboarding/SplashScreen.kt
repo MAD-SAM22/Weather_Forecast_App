@@ -5,32 +5,23 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
-fun SplashScreen(onSplashFinished: () -> Unit) {
+fun WeatherSplashScreen(onSplashFinished: () -> Unit) {
     val context = LocalContext.current
     val scale = remember { Animatable(0.7f) }
     val alpha = remember { Animatable(0f) }
@@ -46,17 +37,15 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image consistent with Home
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data("file:///android_asset/bg/star.jpg") // Using the high res night bg
+                .data("file:///android_asset/bg/star.jpg")
                 .build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Overlay to match home screen's deep atmosphere
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -70,7 +59,6 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // House Image from Assets - Premium Feel
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data("file:///android_asset/onboarding/multi_weather.png")
@@ -107,19 +95,5 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 )
             }
         }
-
-        // Bottom label matching Home screen's "Montreal" style feel
-        Text(
-            text = "Montreal",
-            fontSize = 24.sp,
-            color = Color.White.copy(alpha = 0.4f),
-            fontWeight = FontWeight.Light,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp)
-                .alpha(contentAlpha.value)
-        )
     }
 }
-
-

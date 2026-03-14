@@ -1,6 +1,7 @@
 package com.example.weatherapp.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -24,13 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.weatherapp.data.model.ForecastItem
 import com.example.weatherapp.ui.home.components.ForecastCard
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
+fun HomeScreen(viewModel: HomeViewModel, onNavigateToCities: () -> Unit) {
     val context = LocalContext.current
-    
+    val weather = viewModel.weatherState
+    val isHourly = viewModel.isHourlySelected
+    val forecastData = if (isHourly) viewModel.hourlyForecast else viewModel.weeklyForecast
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image from Assets
         AsyncImage(
@@ -48,36 +51,37 @@ fun HomeScreen(viewModel: HomeViewModel) {
                 .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Increased top spacer to move Montreal and the Degree down
             Spacer(modifier = Modifier.height(50.dp))
 
             Text(
-                text = "Montreal",
+                text = weather?.name ?: "Loading...",
                 fontSize = 34.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Normal
             )
 
             Text(
-                text = "19°",
+                text = if (weather != null) "${weather.main.temp.toInt()}°" else "--°",
                 fontSize = 96.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Thin
             )
 
             Text(
-                text = "Mostly Clear",
+                text = weather?.weather?.firstOrNull()?.main ?: "",
                 fontSize = 20.sp,
                 color = Color.White.copy(alpha = 0.6f),
                 fontWeight = FontWeight.SemiBold
             )
 
-            Text(
-                text = "H:24°  L:18°",
-                fontSize = 20.sp,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (weather != null) {
+                Text(
+                    text = "H:${weather.main.temp_max.toInt()}°  L:${weather.main.temp_min.toInt()}°",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
 
             // House Image from Assets
             AsyncImage(
@@ -123,8 +127,20 @@ fun HomeScreen(viewModel: HomeViewModel) {
                         .padding(top = 25.dp, start = 32.dp, end = 32.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Hourly Forecast", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(text = "Weekly Forecast", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = "Hourly Forecast",
+                        color = if (isHourly) Color.White else Color.White.copy(alpha = 0.6f),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { viewModel.toggleForecastType(true) }
+                    )
+                    Text(
+                        text = "Weekly Forecast",
+                        color = if (!isHourly) Color.White else Color.White.copy(alpha = 0.6f),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { viewModel.toggleForecastType(false) }
+                    )
                 }
                 
                 HorizontalDivider(
@@ -140,14 +156,7 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    val hourlyData = listOf(
-                        ForecastItem("12 AM", "icons/water_drops_night.png", "19°", false),
-                        ForecastItem("Now", "icons/water_drops_night.png", "19°", true),
-                        ForecastItem("2 AM", "icons/scoudy_night.png", "18°", false),
-                        ForecastItem("3 AM", "icons/water_drops_night.png", "19°", false),
-                        ForecastItem("4 AM", "icons/water_drops_night.png", "19°", false)
-                    )
-                    items(hourlyData) { item ->
+                    items(forecastData) { item ->
                         ForecastCard(item)
                     }
                 }
@@ -168,7 +177,7 @@ fun HomeScreen(viewModel: HomeViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = { viewModel.loadWeatherForCurrentLocation() }) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
                 }
                 
@@ -196,7 +205,7 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     }
                 }
 
-                IconButton(onClick = { }) {
+                IconButton(onClick = onNavigateToCities) {
                     Icon(Icons.Default.List, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }

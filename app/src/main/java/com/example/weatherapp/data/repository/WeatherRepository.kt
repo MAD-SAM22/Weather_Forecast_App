@@ -1,7 +1,31 @@
 package com.example.weatherapp.data.repository
 
-import com.example.weatherapp.data.model.Weather
+//import com.example.weatherapp.data.model.Weather
 
-class WeatherRepository {
-    // Repository implementation will go here
+
+import com.example.weatherapp.data.source.remote.WeatherRemoteDataSource
+import com.example.weatherapp.data.model.CurrentWeatherModel
+import com.example.weatherapp.data.model.ForecastResponse
+import com.example.weatherapp.data.source.remote.LocationHelper
+import retrofit2.Response
+
+class WeatherRepository(private val remoteDataSource: WeatherRemoteDataSource) {
+
+
+
+    suspend fun getCurrentWeatherByCoords(lat: Double, lon: Double): Response<CurrentWeatherModel> {
+        return remoteDataSource.getCurrentWeatherByCoords(lat, lon)
+    }
+
+    suspend fun getForecastByCoords(lat: Double, lon: Double): Response<ForecastResponse> {
+        return remoteDataSource.getForecastByCoords(lat, lon)
+    }
+
+    suspend fun getWeatherByCity(city: String): Response<CurrentWeatherModel> {
+        return remoteDataSource.getCurrentWeatherByCity(city)
+    }
+    suspend fun getForecastByCity(city: String): Response<ForecastResponse>{
+        return remoteDataSource.getForecastByCity(city)
+    }
+
 }
