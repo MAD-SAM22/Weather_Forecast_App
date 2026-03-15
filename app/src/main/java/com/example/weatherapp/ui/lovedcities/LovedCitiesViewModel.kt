@@ -1,5 +1,6 @@
 package com.example.weatherapp.ui.lovedcities
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.WeatherRepository
@@ -27,16 +28,27 @@ class LovedCitiesViewModel(
 
     private val _cityImages = MutableStateFlow<Map<String, String>>(emptyMap())
 
+    init {
+        // Monitor database changes and fetch images for new cities
+        viewModelScope.launch {
+            weatherDao.getFavoriteCities().collectLatest { entities ->
+                entities.forEach { entity ->
+                    if (!_cityImages.value.containsKey(entity.name)) {
+                        fetchCityImage(entity.name)
+                    }
+                }
+            }
+        }
+        
+        // Mock data seeding if needed for testing (remove in production)
+        seedInitialData()
+    }
+
     val lovedCities: StateFlow<List<LovedCityUiModel>> = combine(
         weatherDao.getFavoriteCities(),
         _cityImages
     ) { entities, images ->
         entities.map { entity ->
-            // Trigger image fetch if not already present
-            if (!images.containsKey(entity.name)) {
-                fetchCityImage(entity.name)
-            }
-            
             LovedCityUiModel(
                 id = entity.name,
                 temp = entity.temp.toInt(),
@@ -58,15 +70,33 @@ class LovedCitiesViewModel(
     private fun fetchCityImage(cityName: String) {
         viewModelScope.launch {
             try {
+                Log.d("LovedCitiesViewModel", "Fetching image for: $cityName")
                 val response = repository.getCityImage(cityName)
                 if (response.isSuccessful) {
                     val imageUrl = response.body()?.results?.firstOrNull()?.urls?.regular
+                    Log.d("LovedCitiesViewModel", "Image URL for $cityName: $imageUrl")
                     if (imageUrl != null) {
                         _cityImages.update { it + (cityName to imageUrl) }
                     }
+                } else {
+                    Log.e("LovedCitiesViewModel", "Unsplash Error: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                // Ignore for now
+                Log.e("LovedCitiesViewModel", "Exception fetching city image", e)
+            }
+        }
+    }
+
+    private fun seedInitialData() {
+        viewModelScope.launch {
+            val count = weatherDao.getFavoriteCities().first().size
+            if (count == 0) {
+                val mockCities = listOf(
+                    FavoriteCityEntity("Montreal", "Canada", 19.0, "Mid Rain", "icons/sun.png"),
+                    FavoriteCityEntity("Toronto", "Canada", 20.0, "Fast Wind", "icons/scoudy_night.png"),
+                    FavoriteCityEntity("Tokyo", "Japan", 13.0, "Showers", "icons/rain.png")
+                )
+                mockCities.forEach { weatherDao.insertFavoriteCity(it) }
             }
         }
     }

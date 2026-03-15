@@ -19,72 +19,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.example.weatherapp.ui.lovedcities.components.WeatherCityCard
+import org.koin.androidx.compose.koinViewModel
 
 // Custom shape for the weather card based on the UI design
 val WeatherCardShape = GenericShape { size, _ ->
     val width = size.width
     val height = size.height
     
-    // Starting at top left
     moveTo(0f, 40f) 
-    
-    // Top-left curve
     quadraticTo(0f, 0f, 40f, 0f)
-    
-    // Top line: starts at 0 height on left, ends a bit lower on right (around 10-20% height)
     lineTo(width * 0.7f, height * 0.15f)
-    
-    // Top-right curve
     quadraticTo(width, height * 0.25f, width, height * 0.5f)
-    
-    // Right side is half height
     lineTo(width, height - 40f)
-    
-    // Bottom-right curve
     quadraticTo(width, height, width - 40f, height)
-    
-    // Bottom line
     lineTo(40f, height)
-    
-    // Bottom-left curve
     quadraticTo(0f, height, 0f, height - 40f)
-    
     close()
 }
 
-data class CityWeather(
-    val id: String,
-    val temp: Int,
-    val high: Int,
-    val low: Int,
-    val name: String,
-    val country: String,
-    val condition: String,
-    val iconAsset: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LovedCitiesScreen(onBack: () -> Unit) {
-    var cities by remember {
-        mutableStateOf(
-            listOf(
-                CityWeather("1", 19, 24, 18, "Montreal", "Canada", "Mid Rain", "icons/wind.png"),
-                CityWeather("2", 20, 21, -19, "Toronto", "Canada", "Fast Wind", "icons/cloudy_sun.png"),
-                CityWeather("3", 13, 16, 8, "Tokyo", "Japan", "Showers", "icons/bar2.png")
-            )
-        )
-    }
+fun LovedCitiesScreen(
+    onBack: () -> Unit,
+    viewModel: LovedCitiesViewModel = koinViewModel()
+) {
+    val lovedCities by viewModel.lovedCities.collectAsState()
 
     Box(
         modifier = Modifier
@@ -162,11 +127,11 @@ fun LovedCitiesScreen(onBack: () -> Unit) {
                 contentPadding = PaddingValues(20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                items(cities, key = { it.id }) { city ->
+                items(lovedCities, key = { it.id }) { city ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = {
                             if (it == SwipeToDismissBoxValue.EndToStart) {
-                                cities = cities.filter { it.id != city.id }
+                                viewModel.deleteCity(city)
                                 true
                             } else {
                                 false
@@ -209,86 +174,6 @@ fun LovedCitiesScreen(onBack: () -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun WeatherCityCard(city: CityWeather) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(184.dp)
-    ) {
-        // Background card with custom shape
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .clip(WeatherCardShape)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF5936B4), Color(0xFF362A84)),
-                        start = Offset(0f, 0f),
-                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                    )
-                )
-        )
-
-        // Weather Image - Positioning it to overflow slightly like in the UI
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data("file:///android_asset/${city.iconAsset}")
-                .build(),
-            contentDescription = null,
-            modifier = Modifier
-                .size(160.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-10).dp, y = (-20).dp),
-            contentScale = ContentScale.Fit
-        )
-
-        // Temperature and High/Low
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 20.dp, top = 20.dp)
-        ) {
-            Text(
-                text = "${city.temp}°",
-                color = Color.White,
-                fontSize = 64.sp,
-                fontWeight = FontWeight.Normal
-            )
-            
-            Text(
-                text = "H:${city.high}°  L:${city.low}°",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 13.sp
-            )
-        }
-
-        // City and Condition
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = "${city.name}, ${city.country}",
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium
-            )
-            
-            Text(
-                text = city.condition,
-                color = Color.White,
-                fontSize = 13.sp
-            )
         }
     }
 }
