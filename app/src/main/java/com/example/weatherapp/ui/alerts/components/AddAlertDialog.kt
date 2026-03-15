@@ -2,22 +2,31 @@ package com.example.weatherapp.ui.alerts.components
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.weatherapp.data.model.GeocodingResponseItem
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun AddAlertDialog(
     onDismiss: () -> Unit,
+    onSearch: (String) -> Unit,
+    searchResults: List<GeocodingResponseItem>,
     onConfirm: (String, String, Date, String) -> Unit
 ) {
     val context = LocalContext.current
@@ -35,10 +44,38 @@ fun AddAlertDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = cityName,
-                    onValueChange = { cityName = it },
+                    onValueChange = {
+                        cityName = it
+                        onSearch(it)
+                    },
                     label = { Text("City Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
+
+                if (searchResults.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 150.dp)
+                    ) {
+                        items(searchResults) { city ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        cityName = city.name
+                                        onSearch("") // clear results
+                                    }
+                                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                            ) {
+                                Text("${city.name}, ${city.country}", fontSize = 14.sp)
+                            }
+                            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
+                        }
+                    }
+                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = alertType == "Notification", onClick = { alertType = "Notification" })

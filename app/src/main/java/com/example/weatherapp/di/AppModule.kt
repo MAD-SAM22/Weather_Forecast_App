@@ -50,7 +50,7 @@ val repositoryModule = module {
 val viewModelModule = module {
     viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { LovedCitiesViewModel(get(), get()) }
-    viewModel { AlertsViewModel(get()) }
+    viewModel { AlertsViewModel(get() , get() , get()) }
 }
 
 val databaseModule = module {

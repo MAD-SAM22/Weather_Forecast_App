@@ -31,7 +31,7 @@ interface WeatherDao {
     fun getAllAlerts(): Flow<List<WeatherAlertEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAlert(alert: WeatherAlertEntity)
+    suspend fun insertAlert(alert: WeatherAlertEntity): Long
 
     @Delete
     suspend fun deleteAlert(alert: WeatherAlertEntity)

@@ -84,4 +84,7 @@ dependencies {
 
     // Maps (OpenStreetMap)
     implementation(libs.osmdroid)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
 }

@@ -90,6 +90,8 @@ fun AlertsScreen(
         if (showDialog) {
             AddAlertDialog(
                 onDismiss = { showDialog = false },
+                onSearch = { viewModel.searchCities(it) },
+                searchResults = viewModel.searchResults,
                 onConfirm = { cityName, type, date, time ->
                     viewModel.addAlert(cityName, type, date, time)
                     showDialog = false
