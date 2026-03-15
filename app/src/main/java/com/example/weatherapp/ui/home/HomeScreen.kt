@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,11 +21,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.weatherapp.R
 import com.example.weatherapp.ui.home.components.AddCityDialog
 import com.example.weatherapp.ui.home.components.ForecastCard
 import com.example.weatherapp.ui.home.components.MapSelectionDialog
@@ -35,7 +38,8 @@ import org.osmdroid.util.GeoPoint
 fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToCities: () -> Unit,
-    onNavigateToAlerts: () -> Unit
+    onNavigateToAlerts: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
     val weather = viewModel.weatherState
@@ -45,14 +49,14 @@ fun HomeScreen(
     var showAddCityDialog by remember { mutableStateOf(false) }
     var showMapDialog by remember { mutableStateOf(false) }
 
-    // Map weather state to theme
     val theme = WeatherMapper.getTheme(
         condition = weather?.weather?.firstOrNull()?.main,
-        iconCode = weather?.weather?.firstOrNull()?.icon
+        iconCode = weather?.weather?.firstOrNull()?.icon,
+        timestamp = weather?.dt,
+        timezoneOffset = weather?.timezone
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image mapped from Weather state
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data("file:///android_asset/${theme.bgImage}")
@@ -68,10 +72,21 @@ fun HomeScreen(
                 .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(50.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp, top = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = onNavigateToSettings) {
+                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = weather?.name ?: "Loading...",
+                text = weather?.name ?: stringResource(R.string.loading),
                 fontSize = 34.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Normal
@@ -85,7 +100,7 @@ fun HomeScreen(
             )
 
             Text(
-                text = weather?.weather?.firstOrNull()?.main ?: "",
+                text = weather?.weather?.firstOrNull()?.description ?: "",
                 fontSize = 20.sp,
                 color = Color.White.copy(alpha = 0.6f),
                 fontWeight = FontWeight.SemiBold
@@ -93,14 +108,13 @@ fun HomeScreen(
 
             if (weather != null) {
                 Text(
-                    text = "H:${weather.main.temp_max.toInt()}°  L:${weather.main.temp_min.toInt()}°",
+                    text = stringResource(R.string.h_low, weather.main.temp_max.toInt(), weather.main.temp_min.toInt()),
                     fontSize = 20.sp,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
-            // House Image mapped from Weather state
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data("file:///android_asset/${theme.houseImage}")
@@ -115,7 +129,6 @@ fun HomeScreen(
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        // Forecast Section
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -145,14 +158,14 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Hourly Forecast",
+                        text = stringResource(R.string.hourly_forecast),
                         color = if (isHourly) Color.White else Color.White.copy(alpha = 0.6f),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable { viewModel.toggleForecastType(true) }
                     )
                     Text(
-                        text = "Weekly Forecast",
+                        text = stringResource(R.string.weekly_forecast),
                         color = if (!isHourly) Color.White else Color.White.copy(alpha = 0.6f),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -180,7 +193,6 @@ fun HomeScreen(
             }
         }
 
-        // Bottom Navigation Bar
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -247,7 +259,7 @@ fun HomeScreen(
 
         if (showMapDialog) {
             MapSelectionDialog(
-                initialLocation = GeoPoint(30.0444, 31.2357), // Using GeoPoint
+                initialLocation = GeoPoint(30.0444, 31.2357),
                 onDismiss = { showMapDialog = false },
                 onLocationConfirmed = { geoPoint ->
                     viewModel.addLocationToFavorites(geoPoint.latitude, geoPoint.longitude)

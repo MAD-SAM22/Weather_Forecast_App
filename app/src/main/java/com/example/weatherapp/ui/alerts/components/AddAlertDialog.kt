@@ -16,8 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherapp.R
 import com.example.weatherapp.data.model.GeocodingResponseItem
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,7 +41,7 @@ fun AddAlertDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Weather Alert") },
+        title = { Text(stringResource(R.string.add_weather_alert)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -48,7 +50,7 @@ fun AddAlertDialog(
                         cityName = it
                         onSearch(it)
                     },
-                    label = { Text("City Name") },
+                    label = { Text(stringResource(R.string.city_name)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -79,10 +81,10 @@ fun AddAlertDialog(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = alertType == "Notification", onClick = { alertType = "Notification" })
-                    Text("Notification")
+                    Text(stringResource(R.string.notification))
                     Spacer(modifier = Modifier.width(8.dp))
                     RadioButton(selected = alertType == "Alarm", onClick = { alertType = "Alarm" })
-                    Text("Alarm")
+                    Text(stringResource(R.string.alarm))
                 }
 
                 Button(
@@ -129,12 +131,12 @@ fun AddAlertDialog(
             TextButton(onClick = { 
                 if (cityName.isNotBlank()) onConfirm(cityName, alertType, selectedDate, selectedTime) 
             }) {
-                Text("Add")
+                Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

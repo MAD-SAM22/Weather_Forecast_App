@@ -3,9 +3,12 @@ package com.example.weatherapp.di
 import androidx.room.Room
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.source.local.WeatherDatabase
+import com.example.weatherapp.data.source.local.SettingsManager
 import com.example.weatherapp.ui.home.HomeViewModel
 import com.example.weatherapp.ui.lovedcities.LovedCitiesViewModel
 import com.example.weatherapp.ui.alerts.AlertsViewModel
+import com.example.weatherapp.ui.alerts.AlarmTriggerViewModel
+import com.example.weatherapp.ui.settings.SettingsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -15,6 +18,7 @@ import com.example.weatherapp.data.source.remote.UnsplashApiService
 import com.example.weatherapp.data.source.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.source.remote.WeatherRemoteDataSourceImpl
 import com.example.weatherapp.data.source.remote.LocationHelper
+import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 
@@ -41,16 +45,21 @@ val locationModule = module {
     single { LocationHelper(androidContext()) }
 }
 
+val settingsModule = module {
+    single { SettingsManager(androidContext()) }
+}
+
 val repositoryModule = module {
-    // WeatherRemoteDataSourceImpl now needs UnsplashApiService as well
-    single<WeatherRemoteDataSource> { WeatherRemoteDataSourceImpl(get(), get()) }
+    single<WeatherRemoteDataSource> { WeatherRemoteDataSourceImpl(get(), get() , get()) }
     single { WeatherRepository(get()) }
 }
 
 val viewModelModule = module {
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { LovedCitiesViewModel(get(), get()) }
-    viewModel { AlertsViewModel(get() , get() , get()) }
+    viewModel { AlertsViewModel(androidApplication(), get(), get()) }
+    viewModel { AlarmTriggerViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
 }
 
 val databaseModule = module {
@@ -62,4 +71,4 @@ val databaseModule = module {
     single { get<WeatherDatabase>().weatherDao() }
 }
 
-val appModule = listOf(networkModule, locationModule, repositoryModule, viewModelModule, databaseModule)
+val appModule = listOf(networkModule, locationModule, settingsModule, repositoryModule, viewModelModule, databaseModule)

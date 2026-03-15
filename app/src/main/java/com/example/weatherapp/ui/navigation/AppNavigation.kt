@@ -16,6 +16,7 @@ import com.example.weatherapp.ui.onboarding.WeatherSplashScreen
 import com.example.weatherapp.ui.lovedcities.LovedCitiesScreen
 import com.example.weatherapp.ui.alerts.AlertsScreen
 import com.example.weatherapp.ui.alerts.AlarmTriggerScreen
+import com.example.weatherapp.ui.settings.SettingsScreen
 import org.koin.androidx.compose.koinViewModel
 
 private const val PREFS_NAME = "weather_prefs"
@@ -27,6 +28,7 @@ object Routes {
     const val HOME = "home"
     const val LOVED_CITIES = "loved_cities"
     const val ALERTS = "alerts"
+    const val SETTINGS = "settings"
     const val ALARM_TRIGGER = "alarm_trigger/{city}/{message}"
     
     const val DEEP_LINK_BASE = "weazy://"
@@ -67,7 +69,8 @@ fun AppNavigation() {
             HomeScreen(
                 viewModel = homeViewModel,
                 onNavigateToCities = { navController.navigate(Routes.LOVED_CITIES) },
-                onNavigateToAlerts = { navController.navigate(Routes.ALERTS) }
+                onNavigateToAlerts = { navController.navigate(Routes.ALERTS) },
+                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) }
             )
         }
 
@@ -80,7 +83,11 @@ fun AppNavigation() {
                 }
             )
         }
-
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
         composable(
             route = Routes.ALERTS,
             deepLinks = listOf(navDeepLink { uriPattern = Routes.ALERTS_DEEP_LINK })

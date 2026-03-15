@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Weazy</string>
+    <string name="hourly_forecast">التوقعات بالساعة</string>
+    <string name="weekly_forecast">التوقعات الأسبوعية</string>
+    <string name="loading">جاري التحميل…</string>
+    <string name="weather_alerts">تنبيهات الطقس</string>
+    <string name="add_alert">إضافة تنبيه</string>
+    <string name="city_name">اسم المدينة</string>
+    <string name="notification">إشعار</string>
+    <string name="alarm">منبه</string>
+    <string name="stop_alarm">إيقاف المنبه</string>
+    <string name="add">إضافة</string>
+    <string name="cancel">إلغاء</string>
+    <string name="back">رجوع</string>
+    <string name="add_weather_alert">إضافة تنبيه طقس</string>
+    <string name="h_low">ع:%1$d° ص:%2$d°</string>
+</resources>

@@ -13,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherapp.R
 import com.example.weatherapp.ui.alerts.components.AddAlertDialog
 import com.example.weatherapp.ui.alerts.components.AlertItem
 import org.koin.androidx.compose.koinViewModel
@@ -52,13 +54,13 @@ fun AlertsScreen(
                 IconButton(onClick = onBack) {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.back),
                         tint = Color.White,
                         modifier = Modifier.size(32.dp)
                     )
                 }
                 Text(
-                    text = "Weather Alerts",
+                    text = stringResource(R.string.weather_alerts),
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold
@@ -84,7 +86,7 @@ fun AlertsScreen(
             containerColor = Color(0xFF48319D),
             contentColor = Color.White
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Alert")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_alert))
         }
 
         if (showDialog) {

@@ -13,9 +13,12 @@ import com.example.weatherapp.data.model.GeocodingResponseItem
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.source.local.WeatherDao
 import com.example.weatherapp.data.source.local.entity.FavoriteCityEntity
+import com.example.weatherapp.data.source.local.SettingsManager
 import com.example.weatherapp.data.source.remote.LocationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -23,7 +26,8 @@ import java.util.*
 class HomeViewModel(
     private val repository: WeatherRepository,
     private val locationHelper: LocationHelper,
-    private val weatherDao: WeatherDao
+    private val weatherDao: WeatherDao,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     var weatherState by mutableStateOf<CurrentWeatherModel?>(null)
@@ -42,21 +46,56 @@ class HomeViewModel(
         private set
 
     private var searchJob: Job? = null
+    
+    private var currentLat: Double? = null
+    private var currentLon: Double? = null
+    private var currentCity: String? = null
+    
+    private var isFirstLoad = true
 
     init {
+        // Observe settings changes to refresh data
+        viewModelScope.launch {
+            combine(
+                settingsManager.tempUnits,
+                settingsManager.windSpeedUnits,
+                settingsManager.language
+            ) { _, _, _ -> }.collectLatest {
+                if (!isFirstLoad) {
+                    refreshData()
+                }
+            }
+        }
+        
         loadWeatherForCurrentLocation()
+    }
+
+    private fun refreshData() {
+        val lat = currentLat
+        val lon = currentLon
+        if (lat != null && lon != null) {
+            fetchWeatherData(lat, lon)
+        } else if (currentCity != null) {
+            fetchWeatherData(currentCity!!)
+        }
     }
 
     fun loadWeatherForCurrentLocation() {
         Log.d("HomeViewModel", "Loading weather for current location...")
+        isFirstLoad = false
         locationHelper.getDeviceLocation { lat, lon ->
-            Log.d("HomeViewModel", "Received location: $lat, $lon")
-            fetchWeatherData(lat, lon)
+            // Only update if we haven't manually selected a city from favorites in the meantime
+            if (currentCity == null) {
+                currentLat = lat
+                currentLon = lon
+                Log.d("HomeViewModel", "Received location: $lat, $lon")
+                fetchWeatherData(lat, lon)
+            }
         }
         
         viewModelScope.launch {
             delay(5000)
-            if (weatherState == null) {
+            if (weatherState == null && currentLat == null && currentCity == null) {
                 Log.d("HomeViewModel", "Location timeout or fetch pending, trying default city")
                 fetchWeatherData("London")
             }
@@ -111,12 +150,10 @@ class HomeViewModel(
     fun addLocationToFavorites(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
-                // 1. Reverse Geocode to get city name
                 val geoResponse = repository.reverseGeocode(lat, lon)
                 if (geoResponse.isSuccessful && geoResponse.body()?.isNotEmpty() == true) {
                     val cityInfo = geoResponse.body()!![0]
                     
-                    // 2. Fetch weather for that city
                     val weatherResponse = repository.getCurrentWeatherByCoords(lat, lon)
                     if (weatherResponse.isSuccessful) {
                         val weather = weatherResponse.body()
@@ -142,6 +179,9 @@ class HomeViewModel(
     }
 
     fun fetchWeatherData(lat: Double, lon: Double) {
+        currentLat = lat
+        currentLon = lon
+        currentCity = null
         viewModelScope.launch {
             try {
                 val weatherResponse = repository.getCurrentWeatherByCoords(lat, lon)
@@ -158,12 +198,17 @@ class HomeViewModel(
                     processForecast(forecastResponse.body())
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Exception fetching weather by coords: ${e.message}", e)
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    Log.e("HomeViewModel", "Exception fetching weather by coords: ${e.message}", e)
+                }
             }
         }
     }
 
     fun fetchWeatherData(city: String) {
+        currentCity = city
+        currentLat = null
+        currentLon = null
         viewModelScope.launch {
             try {
                 val weatherResponse = repository.getWeatherByCity(city)
@@ -180,7 +225,9 @@ class HomeViewModel(
                     processForecast(forecastResponse.body())
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Exception fetching weather by city: ${e.message}", e)
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    Log.e("HomeViewModel", "Exception fetching weather by city: ${e.message}", e)
+                }
             }
         }
     }
@@ -189,7 +236,6 @@ class HomeViewModel(
         forecast?.let {
             val allItems = it.list
             
-            // Hourly Forecast (next 8 items, 24 hours)
             hourlyForecast = allItems.take(8).map { item ->
                 ForecastDisplayItem(
                     time = formatTime(item.dt),
@@ -198,7 +244,6 @@ class HomeViewModel(
                 )
             }
 
-            // Weekly Forecast (one item per day)
             weeklyForecast = allItems.filterIndexed { index, _ -> index % 8 == 0 }.take(5).map { item ->
                 ForecastDisplayItem(
                     time = formatDate(item.dt),
@@ -214,12 +259,16 @@ class HomeViewModel(
     }
 
     private fun formatTime(timestamp: Long): String {
-        val sdf = SimpleDateFormat("h a", Locale.getDefault())
+        val lang = settingsManager.language.value
+        val locale = Locale.forLanguageTag(lang)
+        val sdf = SimpleDateFormat("h a", locale)
         return sdf.format(Date(timestamp * 1000))
     }
 
     private fun formatDate(timestamp: Long): String {
-        val sdf = SimpleDateFormat("EEE", Locale.getDefault())
+        val lang = settingsManager.language.value
+        val locale = Locale.forLanguageTag(lang)
+        val sdf = SimpleDateFormat("EEE", locale)
         return sdf.format(Date(timestamp * 1000))
     }
 

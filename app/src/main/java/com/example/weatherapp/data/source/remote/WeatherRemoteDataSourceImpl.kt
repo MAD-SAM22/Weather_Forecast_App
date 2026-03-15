@@ -4,6 +4,8 @@ import com.example.weatherapp.data.model.CurrentWeatherModel
 import com.example.weatherapp.data.model.ForecastResponse
 import com.example.weatherapp.data.model.GeocodingResponseItem
 import com.example.weatherapp.data.model.UnsplashResponse
+import com.example.weatherapp.data.source.local.SettingsManager
+import kotlinx.coroutines.flow.first
 import retrofit2.Response
 
 interface WeatherRemoteDataSource {
@@ -18,26 +20,35 @@ interface WeatherRemoteDataSource {
 
 class WeatherRemoteDataSourceImpl(
     private val apiService: WeatherApiService,
-    private val unsplashApiService: UnsplashApiService
+    private val unsplashApiService: UnsplashApiService,
+    private val settingsManager: SettingsManager
 ) : WeatherRemoteDataSource {
 
     private val API_KEY = "037a373011c520cc888756c98e9d9260"
     private val UNSPLASH_CLIENT_ID = "t365ol8lMra4ralBTzFhll1mTkpwNnH4WHa_TGE0Rxk"
 
     override suspend fun getCurrentWeatherByCoords(lat: Double, lon: Double): Response<CurrentWeatherModel> {
-        return apiService.getCurrentWeather(lat = lat, lon = lon, apiKey = API_KEY)
+        val units = settingsManager.tempUnits.first()
+        val lang = settingsManager.language.first()
+        return apiService.getCurrentWeather(lat = lat, lon = lon, apiKey = API_KEY, units = units, lang = lang)
     }
 
     override suspend fun getCurrentWeatherByCity(city: String): Response<CurrentWeatherModel> {
-        return apiService.getCurrentWeather(cityName = city, apiKey = API_KEY)
+        val units = settingsManager.tempUnits.first()
+        val lang = settingsManager.language.first()
+        return apiService.getCurrentWeather(cityName = city, apiKey = API_KEY, units = units, lang = lang)
     }
 
     override suspend fun getForecastByCoords(lat: Double, lon: Double): Response<ForecastResponse> {
-        return apiService.getFiveDayForecast(lat = lat, lon = lon, apiKey = API_KEY)
+        val units = settingsManager.tempUnits.first()
+        val lang = settingsManager.language.first()
+        return apiService.getFiveDayForecast(lat = lat, lon = lon, apiKey = API_KEY, units = units, lang = lang)
     }
 
     override suspend fun getForecastByCity(city: String): Response<ForecastResponse> {
-        return apiService.getFiveDayForecast(cityName = city, apiKey = API_KEY)
+        val units = settingsManager.tempUnits.first()
+        val lang = settingsManager.language.first()
+        return apiService.getFiveDayForecast(cityName = city, apiKey = API_KEY, units = units, lang = lang)
     }
 
     override suspend fun getCityImage(city: String): Response<UnsplashResponse> {

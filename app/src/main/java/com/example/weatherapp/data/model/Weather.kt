@@ -5,7 +5,8 @@ data class CurrentWeatherModel(
     val weather: List<WeatherDescription>,
     val wind: Wind,
     val name: String, // City Name
-    val dt: Long     // Timestamp
+    val dt: Long,     // Timestamp
+    val timezone: Int // Timezone offset in seconds from UTC
 )
 
 data class MainData(
