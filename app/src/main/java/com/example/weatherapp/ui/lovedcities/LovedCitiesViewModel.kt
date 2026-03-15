@@ -29,7 +29,7 @@ class LovedCitiesViewModel(
     private val _cityImages = MutableStateFlow<Map<String, String>>(emptyMap())
 
     init {
-        // Monitor database changes and fetch images for new cities
+        // fetch images for new cities
         viewModelScope.launch {
             weatherDao.getFavoriteCities().collectLatest { entities ->
                 entities.forEach { entity ->

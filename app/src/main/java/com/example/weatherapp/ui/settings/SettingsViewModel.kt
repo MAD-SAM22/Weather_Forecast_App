@@ -9,7 +9,6 @@ class SettingsViewModel(private val settingsManager: SettingsManager) : ViewMode
     val tempUnits: StateFlow<String> = settingsManager.tempUnits
     val windUnits: StateFlow<String> = settingsManager.windSpeedUnits
     
-    // Alias for compatibility with SettingsScreen
     val units: StateFlow<String> = settingsManager.tempUnits
 
     fun setLanguage(lang: String) {

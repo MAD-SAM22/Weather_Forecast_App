@@ -8,22 +8,26 @@ import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.source.local.SettingsManager
 import com.example.weatherapp.data.source.local.WeatherDao
 import com.example.weatherapp.data.source.remote.LocationHelper
+import com.example.weatherapp.ui.utils.NetworkMonitor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
+import org.robolectric.RobolectricTestRunner
 import retrofit2.Response
 
 @ExperimentalCoroutinesApi
+@RunWith(RobolectricTestRunner::class)
 class HomeViewModelTest {
 
     @get:Rule
@@ -41,7 +45,11 @@ class HomeViewModelTest {
     @Mock
     private lateinit var settingsManager: SettingsManager
 
+    @Mock
+    private lateinit var networkMonitor: NetworkMonitor
+
     private lateinit var viewModel: HomeViewModel
+
     private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
@@ -53,8 +61,13 @@ class HomeViewModelTest {
         `when`(settingsManager.tempUnits).thenReturn(MutableStateFlow("metric"))
         `when`(settingsManager.windSpeedUnits).thenReturn(MutableStateFlow("m/s"))
         `when`(settingsManager.language).thenReturn(MutableStateFlow("en"))
+        
+        // Mock network monitor and dao flows used in init
+        `when`(networkMonitor.isOnline).thenReturn(flowOf(true))
+        `when`(weatherDao.getCurrentWeather()).thenReturn(flowOf(null))
 
-        viewModel = HomeViewModel(repository, locationHelper, weatherDao, settingsManager)
+        viewModel = HomeViewModel(
+            repository, locationHelper, weatherDao, settingsManager, networkMonitor)
     }
 
     @After
