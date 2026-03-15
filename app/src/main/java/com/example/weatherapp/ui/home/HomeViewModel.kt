@@ -6,15 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.weatherapp.data.model.CurrentWeatherModel
-import com.example.weatherapp.data.model.ForecastDisplayItem
-import com.example.weatherapp.data.model.ForecastResponse
-import com.example.weatherapp.data.model.GeocodingResponseItem
+import com.example.weatherapp.data.model.*
 import com.example.weatherapp.data.repository.WeatherRepository
 import com.example.weatherapp.data.source.local.WeatherDao
 import com.example.weatherapp.data.source.local.entity.FavoriteCityEntity
 import com.example.weatherapp.data.source.local.SettingsManager
 import com.example.weatherapp.data.source.remote.LocationHelper
+import com.example.weatherapp.ui.utils.NetworkMonitor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -27,7 +25,8 @@ class HomeViewModel(
     private val repository: WeatherRepository,
     private val locationHelper: LocationHelper,
     private val weatherDao: WeatherDao,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     var weatherState by mutableStateOf<CurrentWeatherModel?>(null)
@@ -47,6 +46,9 @@ class HomeViewModel(
 
     var isLoading by mutableStateOf(false)
         private set
+        
+    var isOnline by mutableStateOf(true)
+        private set
 
     private var searchJob: Job? = null
     
@@ -57,7 +59,35 @@ class HomeViewModel(
     private var isFirstLoad = true
 
     init {
-        // Observe settings changes to refresh data
+        // 1. Observe network status
+        viewModelScope.launch {
+            networkMonitor.isOnline.collectLatest { online ->
+                isOnline = online
+
+                if (online && !isFirstLoad) {
+                    refreshData()
+                }
+            }
+        }
+
+        // 2. Load cached data from DB immediately
+        viewModelScope.launch {
+            weatherDao.getCurrentWeather().collectLatest { entity ->
+                if (entity != null && weatherState == null) {
+                    Log.d("HomeViewModel", "Loaded cached weather for ${entity.cityName}")
+                    weatherState = CurrentWeatherModel(
+                        main = MainData(entity.temp, entity.temp, entity.tempMin, entity.tempMax, 0, 0),
+                        weather = listOf(WeatherDescription(entity.condition, entity.condition, entity.icon)),
+                        wind = Wind(0.0, 0),
+                        name = entity.cityName,
+                        dt = entity.timestamp,
+                        timezone = 0
+                    )
+                }
+            }
+        }
+
+        // 3Observe settings changes to refresh data
         viewModelScope.launch {
             combine(
                 settingsManager.tempUnits,
@@ -70,10 +100,12 @@ class HomeViewModel(
             }
         }
         
+        // Initial attempt to get current location
         loadWeatherForCurrentLocation()
     }
 
     private fun refreshData() {
+        if (!isOnline) return
         val lat = currentLat
         val lon = currentLon
         if (lat != null && lon != null) {
@@ -84,25 +116,31 @@ class HomeViewModel(
     }
 
     fun loadWeatherForCurrentLocation() {
-        Log.d("HomeViewModel", "Loading weather for current location...")
+        Log.d("HomeViewModel", "Attempting to get device location...")
         isFirstLoad = false
+        
+        if (!isOnline) {
+            Log.d("HomeViewModel", "Offline, skipping location fetch")
+            return
+        }
+        
         isLoading = true
         locationHelper.getDeviceLocation { lat, lon ->
-            // Only update if we haven't manually selected a city from favorites in the meantime
             if (currentCity == null) {
                 currentLat = lat
                 currentLon = lon
-                Log.d("HomeViewModel", "Received location: $lat, $lon")
+                Log.d("HomeViewModel", "Location received: $lat, $lon. Fetching weather...")
                 fetchWeatherData(lat, lon)
             } else {
                 isLoading = false
             }
         }
         
+        // Timeout else select london
         viewModelScope.launch {
-            delay(5000)
-            if (weatherState == null && currentLat == null && currentCity == null) {
-                Log.d("HomeViewModel", "Location timeout or fetch pending, trying default city")
+            delay(12000)
+            if (weatherState == null && currentLat == null && currentCity == null && isOnline) {
+                Log.d("HomeViewModel", "Location/Weather timeout, falling back to London")
                 fetchWeatherData("London")
             }
         }
@@ -185,6 +223,7 @@ class HomeViewModel(
     }
 
     fun fetchWeatherData(lat: Double, lon: Double) {
+        if (!isOnline) return
         currentLat = lat
         currentLon = lon
         currentCity = null
@@ -194,10 +233,6 @@ class HomeViewModel(
                 val weatherResponse = repository.getCurrentWeatherByCoords(lat, lon)
                 if (weatherResponse.isSuccessful) {
                     weatherState = weatherResponse.body()
-                    Log.d("HomeViewModel", "Weather fetch successful for $lat, $lon")
-                } else {
-                    val errorMsg = weatherResponse.errorBody()?.string()
-                    Log.e("HomeViewModel", "Weather fetch failed (HTTP ${weatherResponse.code()}): $errorMsg")
                 }
 
                 val forecastResponse = repository.getForecastByCoords(lat, lon)
@@ -215,6 +250,7 @@ class HomeViewModel(
     }
 
     fun fetchWeatherData(city: String) {
+        if (!isOnline) return
         currentCity = city
         currentLat = null
         currentLon = null
@@ -224,10 +260,6 @@ class HomeViewModel(
                 val weatherResponse = repository.getWeatherByCity(city)
                 if (weatherResponse.isSuccessful) {
                     weatherState = weatherResponse.body()
-                    Log.d("HomeViewModel", "Weather fetch successful for $city")
-                } else {
-                    val errorMsg = weatherResponse.errorBody()?.string()
-                    Log.e("HomeViewModel", "Weather fetch failed for $city (HTTP ${weatherResponse.code()}): $errorMsg")
                 }
 
                 val forecastResponse = repository.getForecastByCity(city)
@@ -247,10 +279,11 @@ class HomeViewModel(
     private fun processForecast(forecast: ForecastResponse?) {
         forecast?.let {
             val allItems = it.list
+            val timezoneOffset = it.city.timezone
             
             hourlyForecast = allItems.take(8).map { item ->
                 ForecastDisplayItem(
-                    time = formatTime(item.dt),
+                    time = formatTime(item.dt, timezoneOffset),
                     iconAssetPath = mapIconToAsset(item.weather.firstOrNull()?.icon),
                     temp = "${item.main.temp.toInt()}°"
                 )
@@ -258,7 +291,7 @@ class HomeViewModel(
 
             weeklyForecast = allItems.filterIndexed { index, _ -> index % 8 == 0 }.take(5).map { item ->
                 ForecastDisplayItem(
-                    time = formatDate(item.dt),
+                    time = formatDate(item.dt, timezoneOffset),
                     iconAssetPath = mapIconToAsset(item.weather.firstOrNull()?.icon),
                     temp = "${item.main.temp.toInt()}°"
                 )
@@ -270,17 +303,22 @@ class HomeViewModel(
         isHourlySelected = isHourly
     }
 
-    private fun formatTime(timestamp: Long): String {
+    private fun formatTime(timestamp: Long, timezoneOffset: Int): String {
         val lang = settingsManager.language.value
         val locale = Locale.forLanguageTag(lang)
         val sdf = SimpleDateFormat("h a", locale)
+        // Adjust for city timezone offset (seconds to milliseconds)
+        val tzId = TimeZone.getAvailableIDs(timezoneOffset * 1000).firstOrNull() ?: "UTC"
+        sdf.timeZone = TimeZone.getTimeZone(tzId)
         return sdf.format(Date(timestamp * 1000))
     }
 
-    private fun formatDate(timestamp: Long): String {
+    private fun formatDate(timestamp: Long, timezoneOffset: Int): String {
         val lang = settingsManager.language.value
         val locale = Locale.forLanguageTag(lang)
         val sdf = SimpleDateFormat("EEE", locale)
+        val tzId = TimeZone.getAvailableIDs(timezoneOffset * 1000).firstOrNull() ?: "UTC"
+        sdf.timeZone = TimeZone.getTimeZone(tzId)
         return sdf.format(Date(timestamp * 1000))
     }
 

@@ -18,6 +18,7 @@ import com.example.weatherapp.data.source.remote.UnsplashApiService
 import com.example.weatherapp.data.source.remote.WeatherRemoteDataSource
 import com.example.weatherapp.data.source.remote.WeatherRemoteDataSourceImpl
 import com.example.weatherapp.data.source.remote.LocationHelper
+import com.example.weatherapp.ui.utils.NetworkMonitor
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -39,6 +40,8 @@ val networkModule = module {
 
     single { get<Retrofit>(named("WeatherRetrofit")).create(WeatherApiService::class.java) }
     single { get<Retrofit>(named("UnsplashRetrofit")).create(UnsplashApiService::class.java) }
+    
+    single { NetworkMonitor(androidContext()) }
 }
 
 val locationModule = module {
@@ -51,11 +54,11 @@ val settingsModule = module {
 
 val repositoryModule = module {
     single<WeatherRemoteDataSource> { WeatherRemoteDataSourceImpl(get(), get() , get()) }
-    single { WeatherRepository(get()) }
+    single { WeatherRepository(get(), get()) }
 }
 
 val viewModelModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
     viewModel { LovedCitiesViewModel(get(), get()) }
     viewModel { AlertsViewModel(androidApplication(), get(), get()) }
     viewModel { AlarmTriggerViewModel(get()) }

@@ -5,12 +5,33 @@ import com.example.weatherapp.data.model.CurrentWeatherModel
 import com.example.weatherapp.data.model.ForecastResponse
 import com.example.weatherapp.data.model.GeocodingResponseItem
 import com.example.weatherapp.data.model.UnsplashResponse
+import com.example.weatherapp.data.source.local.WeatherDao
+import com.example.weatherapp.data.source.local.entity.CurrentWeatherEntity
 import retrofit2.Response
 
-class WeatherRepository(private val remoteDataSource: WeatherRemoteDataSource) {
+class WeatherRepository(
+    private val remoteDataSource: WeatherRemoteDataSource,
+    private val weatherDao: WeatherDao
+) {
 
     suspend fun getCurrentWeatherByCoords(lat: Double, lon: Double): Response<CurrentWeatherModel> {
-        return remoteDataSource.getCurrentWeatherByCoords(lat, lon)
+        val response = remoteDataSource.getCurrentWeatherByCoords(lat, lon)
+        if (response.isSuccessful) {
+            response.body()?.let { model ->
+                weatherDao.insertCurrentWeather(
+                    CurrentWeatherEntity(
+                        cityName = model.name,
+                        temp = model.main.temp,
+                        tempMax = model.main.temp_max,
+                        tempMin = model.main.temp_min,
+                        condition = model.weather.firstOrNull()?.description ?: "",
+                        icon = model.weather.firstOrNull()?.icon ?: "",
+                        timestamp = model.dt
+                    )
+                )
+            }
+        }
+        return response
     }
 
     suspend fun getForecastByCoords(lat: Double, lon: Double): Response<ForecastResponse> {
@@ -18,7 +39,23 @@ class WeatherRepository(private val remoteDataSource: WeatherRemoteDataSource) {
     }
 
     suspend fun getWeatherByCity(city: String): Response<CurrentWeatherModel> {
-        return remoteDataSource.getCurrentWeatherByCity(city)
+        val response = remoteDataSource.getCurrentWeatherByCity(city)
+        if (response.isSuccessful) {
+            response.body()?.let { model ->
+                weatherDao.insertCurrentWeather(
+                    CurrentWeatherEntity(
+                        cityName = model.name,
+                        temp = model.main.temp,
+                        tempMax = model.main.temp_max,
+                        tempMin = model.main.temp_min,
+                        condition = model.weather.firstOrNull()?.description ?: "",
+                        icon = model.weather.firstOrNull()?.icon ?: "",
+                        timestamp = model.dt
+                    )
+                )
+            }
+        }
+        return response
     }
 
     suspend fun getForecastByCity(city: String): Response<ForecastResponse>{

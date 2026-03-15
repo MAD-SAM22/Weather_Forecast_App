@@ -14,4 +14,5 @@
     <string name="back">رجوع</string>
     <string name="add_weather_alert">إضافة تنبيه طقس</string>
     <string name="h_low">ع:%1$d° ص:%2$d°</string>
+    <string name="no_internet">لا يوجد اتصال بالإنترنت. يتم عرض البيانات المخزنة.</string>
 </resources>

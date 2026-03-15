@@ -14,4 +14,5 @@
     <string name="back">Back</string>
     <string name="add_weather_alert">Add Weather Alert</string>
     <string name="h_low">H:%1$d° L:%2$d°</string>
+    <string name="no_internet">No Internet Connection. Showing offline data.</string>
 </resources>

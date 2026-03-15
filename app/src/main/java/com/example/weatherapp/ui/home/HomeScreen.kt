@@ -1,5 +1,8 @@
 package com.example.weatherapp.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -46,6 +50,7 @@ fun HomeScreen(
     val isHourly = viewModel.isHourlySelected
     val forecastData = if (isHourly) viewModel.hourlyForecast else viewModel.weeklyForecast
     val isLoading = viewModel.isLoading
+    val isOnline = viewModel.isOnline
     
     var showAddCityDialog by remember { mutableStateOf(false) }
     var showMapDialog by remember { mutableStateOf(false) }
@@ -73,6 +78,28 @@ fun HomeScreen(
                 .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Network Status Banner
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Red.copy(alpha = 0.7f))
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_internet),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -222,7 +249,7 @@ fun HomeScreen(
                             brush = Brush.linearGradient(listOf(Color.White, Color(0xFFE0E0E0))),
                             shape = CircleShape
                         )
-                        .clickable { showAddCityDialog = true },
+                        .clickable { if(isOnline) showAddCityDialog = true },
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -232,7 +259,12 @@ fun HomeScreen(
                            .background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFF48319D), modifier = Modifier.size(32.dp))
+                        Icon(
+                            Icons.Default.Add, 
+                            contentDescription = null, 
+                            tint = if(isOnline) Color(0xFF48319D) else Color.Gray, 
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                 }
 
