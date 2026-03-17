@@ -6,7 +6,9 @@ data class CurrentWeatherModel(
     val wind: Wind,
     val name: String, // City Name
     val dt: Long,     // Timestamp
-    val timezone: Int // Timezone offset in seconds from UTC
+    val timezone: Int, // Timezone offset in seconds from UTC
+    val sys: SysData? = null,
+    val rain: RainData? = null
 )
 
 data class MainData(
@@ -27,4 +29,19 @@ data class WeatherDescription(
 data class Wind(
     val speed: Double,
     val deg: Int
+)
+
+data class SysData(
+    val type: Int? = null,
+    val id: Int? = null,
+    val country: String? = null,
+    val sunrise: Long? = null,
+    val sunset: Long? = null
+)
+
+data class RainData(
+    @com.google.gson.annotations.SerializedName("1h")
+    val oneHour: Double? = null,
+    @com.google.gson.annotations.SerializedName("3h")
+    val threeHour: Double? = null
 )

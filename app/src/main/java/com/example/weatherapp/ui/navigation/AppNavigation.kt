@@ -48,7 +48,7 @@ fun AppNavigation() {
             WeatherSplashScreen {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 val done = prefs.getBoolean(KEY_ONBOARDING_DONE, false)
-                val dest = if (done) Routes.HOME else Routes.ONBOARDING
+                val dest = Routes.ONBOARDING
                 navController.navigate(dest) {
                     popUpTo(Routes.SPLASH) { inclusive = true }
                 }

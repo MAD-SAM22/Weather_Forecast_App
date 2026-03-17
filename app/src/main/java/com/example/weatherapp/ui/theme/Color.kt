@@ -15,3 +15,11 @@ val PrimaryPurple = Color(0xFF48319D)
 val ForecastCardTop = Color(0xFF3E3C6E)
 val ForecastCardBottom = Color(0xFF2E335A)
 val OnboardingCardBg = Color(0xFF3E3C6E).copy(alpha = 0.8f)
+
+// New Light Theme Colors for Onboarding
+val LightBackgroundGradientStart = Color(0xFFE0F2FE)
+val LightBackgroundGradientEnd = Color(0xFFFFFFFF)
+val LightTextPrimary = Color(0xFF1E293B)
+val LightTextSecondary = Color(0xFF475569)
+val LightGlassCardBg = Color(0xFFFFFFFF).copy(alpha = 0.6f)
+val LightGlassCardBorder = Color(0xFFFFFFFF).copy(alpha = 0.8f)

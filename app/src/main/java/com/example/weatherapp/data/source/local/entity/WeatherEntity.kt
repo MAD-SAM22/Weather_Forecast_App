@@ -12,7 +12,12 @@ data class CurrentWeatherEntity(
     val tempMin: Double,
     val condition: String,
     val icon: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val windSpeed: Double = 0.0,
+    val windDeg: Int = 0,
+    val sunrise: Long? = null,
+    val sunset: Long? = null,
+    val rainVolume: Double? = null
 )
 
 @Entity(tableName = "favorite_cities")

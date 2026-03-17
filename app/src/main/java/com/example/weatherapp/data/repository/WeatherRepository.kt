@@ -26,7 +26,12 @@ class WeatherRepository(
                         tempMin = model.main.temp_min,
                         condition = model.weather.firstOrNull()?.description ?: "",
                         icon = model.weather.firstOrNull()?.icon ?: "",
-                        timestamp = model.dt
+                        timestamp = model.dt,
+                        windSpeed = model.wind.speed,
+                        windDeg = model.wind.deg,
+                        sunrise = model.sys?.sunrise,
+                        sunset = model.sys?.sunset,
+                        rainVolume = model.rain?.oneHour ?: model.rain?.threeHour
                     )
                 )
             }
@@ -50,7 +55,12 @@ class WeatherRepository(
                         tempMin = model.main.temp_min,
                         condition = model.weather.firstOrNull()?.description ?: "",
                         icon = model.weather.firstOrNull()?.icon ?: "",
-                        timestamp = model.dt
+                        timestamp = model.dt,
+                        windSpeed = model.wind.speed,
+                        windDeg = model.wind.deg,
+                        sunrise = model.sys?.sunrise,
+                        sunset = model.sys?.sunset,
+                        rainVolume = model.rain?.oneHour ?: model.rain?.threeHour
                     )
                 )
             }

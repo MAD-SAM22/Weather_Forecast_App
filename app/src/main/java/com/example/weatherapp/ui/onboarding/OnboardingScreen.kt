@@ -84,20 +84,17 @@ fun OnboardingScreen(onFinished: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
 
         // ── Background consistent with Home theme ───────────────────
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data("file:///android_asset/bg/star.jpg")
-                .build(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Depth overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF2E335A).copy(alpha = 0.4f))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            com.example.weatherapp.ui.theme.LightBackgroundGradientStart,
+                            com.example.weatherapp.ui.theme.LightBackgroundGradientEnd
+                        )
+                    )
+                )
         )
 
         // ── Pages ───────────────────────────────────────────────────
@@ -105,9 +102,12 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { index ->
+            // Calculate the page page offset for animation
+            val pageOffset = (pagerState.currentPage - index) + pagerState.currentPageOffsetFraction
             OnboardingPageContent(
                 data = pages[index],
-                pageIndex = index
+                pageIndex = index,
+                pageOffset = pageOffset
             )
         }
 
@@ -136,8 +136,8 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                             .width(width)
                             .clip(CircleShape)
                             .background(
-                                if (selected) Color.White
-                                else Color.White.copy(alpha = 0.3f)
+                                if (selected) com.example.weatherapp.ui.theme.PrimaryPurple
+                                else com.example.weatherapp.ui.theme.PrimaryPurple.copy(alpha = 0.3f)
                             )
                     )
                 }
@@ -169,12 +169,12 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(Color.White),
+                        .background(com.example.weatherapp.ui.theme.PrimaryPurple),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (currentPage < pages.size - 1) "→" else "✓",
-                        color = Color(0xFF48319D),
+                        color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -187,8 +187,9 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             if (currentPage < pages.size - 1) {
                 Text(
                     text = "Skip",
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = com.example.weatherapp.ui.theme.LightTextSecondary,
                     fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { onFinished() }
                 )
             }
@@ -201,9 +202,17 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 @Composable
 fun OnboardingPageContent(
     data: OnboardingData,
-    pageIndex: Int
+    pageIndex: Int,
+    pageOffset: Float
 ) {
     val context = LocalContext.current
+    
+    // Animation calculations based on scroll offset
+    val imageScale = 1f - (kotlin.math.abs(pageOffset) * 0.15f).coerceIn(0f, 0.4f)
+    val imageTranslation = pageOffset * 200f
+    
+    val cardAlpha = 1f - (kotlin.math.abs(pageOffset) * 0.8f).coerceIn(0f, 1f)
+    val cardTranslation = pageOffset * 100f
     
     Column(
         modifier = Modifier
@@ -221,22 +230,28 @@ fun OnboardingPageContent(
             contentDescription = null,
             modifier = Modifier
                 .height(280.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = imageScale
+                    scaleY = imageScale
+                    translationX = imageTranslation
+                },
             contentScale = ContentScale.Fit
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // ── Glass Text Card - Matching Forecast Section Gradient ────
+        // ── Glass Text Card - Matching Lighter Theme ────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .graphicsLayer {
+                    alpha = cardAlpha
+                    translationX = cardTranslation
+                }
                 .clip(RoundedCornerShape(44.dp))
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(ForecastCardTop.copy(alpha = 0.8f), ForecastCardBottom)
-                    )
-                )
+                .border(2.dp, com.example.weatherapp.ui.theme.LightGlassCardBorder, RoundedCornerShape(44.dp))
+                .background(com.example.weatherapp.ui.theme.LightGlassCardBg)
                 .padding(horizontal = 24.dp, vertical = 32.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -244,12 +259,12 @@ fun OnboardingPageContent(
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.15f))
+                        .background(com.example.weatherapp.ui.theme.PrimaryPurple.copy(alpha = 0.1f))
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = data.tag.uppercase(),
-                        color = Color.White,
+                        color = com.example.weatherapp.ui.theme.PrimaryPurple,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -260,7 +275,7 @@ fun OnboardingPageContent(
 
                 Text(
                     text = data.title,
-                    color = Color.White,
+                    color = com.example.weatherapp.ui.theme.LightTextPrimary,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -271,7 +286,7 @@ fun OnboardingPageContent(
 
                 Text(
                     text = data.description,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = com.example.weatherapp.ui.theme.LightTextSecondary,
                     fontSize = 15.sp,
                     textAlign = TextAlign.Center,
                     lineHeight = 22.sp

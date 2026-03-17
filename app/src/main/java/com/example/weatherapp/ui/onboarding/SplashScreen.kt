@@ -23,35 +23,35 @@ import kotlinx.coroutines.delay
 @Composable
 fun WeatherSplashScreen(onSplashFinished: () -> Unit) {
     val context = LocalContext.current
-    val scale = remember { Animatable(0.7f) }
+    val scale = remember { Animatable(0.5f) }
     val alpha = remember { Animatable(0f) }
     val contentAlpha = remember { Animatable(0f) }
+    val floatY = remember { Animatable(50f) }
 
     LaunchedEffect(Unit) {
+        // Initial logo animation
         scale.animateTo(1f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow))
         alpha.animateTo(1f, tween(1000))
-        delay(500)
-        contentAlpha.animateTo(1f, tween(1000))
-        delay(2000)
+        floatY.animateTo(0f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow))
+        delay(300)
+        // Content fade in
+        contentAlpha.animateTo(1f, tween(800))
+        delay(1800)
         onSplashFinished()
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data("file:///android_asset/bg/star.jpg")
-                .build(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF2E335A).copy(alpha = 0.3f))
-        )
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        com.example.weatherapp.ui.theme.LightBackgroundGradientStart,
+                        com.example.weatherapp.ui.theme.LightBackgroundGradientEnd
+                    )
+                )
+            )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,13 +61,17 @@ fun WeatherSplashScreen(onSplashFinished: () -> Unit) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data("file:///android_asset/onboarding/multi_weather.png")
+                    .data("file:///android_asset/onboarding/weather_app_logo_3d.png")
                     .build(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(280.dp)
-                    .scale(scale.value)
-                    .alpha(alpha.value),
+                    .graphicsLayer {
+                        scaleX = scale.value
+                        scaleY = scale.value
+                        this.alpha = alpha.value
+                        translationY = floatY.value
+                    },
                 contentScale = ContentScale.Fit
             )
 
@@ -80,7 +84,7 @@ fun WeatherSplashScreen(onSplashFinished: () -> Unit) {
                 Text(
                     text = "Weazy",
                     fontSize = 42.sp,
-                    color = Color.White,
+                    color = com.example.weatherapp.ui.theme.LightTextPrimary,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -88,7 +92,7 @@ fun WeatherSplashScreen(onSplashFinished: () -> Unit) {
                 Text(
                     text = "Know the weather anywhere, anytime",
                     fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = com.example.weatherapp.ui.theme.LightTextSecondary,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 8.dp)
