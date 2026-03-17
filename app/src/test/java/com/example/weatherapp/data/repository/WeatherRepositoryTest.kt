@@ -3,30 +3,34 @@ package com.example.weatherapp.data.repository
 import com.example.weatherapp.data.model.CurrentWeatherModel
 import com.example.weatherapp.data.model.MainData
 import com.example.weatherapp.data.model.Wind
+import com.example.weatherapp.data.source.local.WeatherDao
 import com.example.weatherapp.data.source.remote.WeatherRemoteDataSource
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import retrofit2.Response
 
 class WeatherRepositoryTest {
 
-    @Mock
+    @MockK
     private lateinit var remoteDataSource: WeatherRemoteDataSource
+
+    @MockK
+    private lateinit var weatherDao: WeatherDao
 
     private lateinit var repository: WeatherRepository
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
+        MockKAnnotations.init(this)
         repository = WeatherRepository(
             remoteDataSource,
-            weatherDao = mock()
+            weatherDao = weatherDao
         )
     }
 
@@ -43,7 +47,7 @@ class WeatherRepositoryTest {
         )
         val response = Response.success(weatherModel)
 
-        `when`(remoteDataSource.getCurrentWeatherByCity(cityName)).thenReturn(response)
+        coEvery { remoteDataSource.getCurrentWeatherByCity(cityName) } returns response
 
         val result = repository.getWeatherByCity(cityName)
 

@@ -44,7 +44,7 @@ class AlertsViewModel(
 
     fun searchCities(query: String) {
         searchJob?.cancel()
-        if (query.length < 3) {
+        if (query.length < 2) {
             searchResults = emptyList()
             return
         }
@@ -63,7 +63,7 @@ class AlertsViewModel(
 
     fun addAlert(cityName: String, alertType: String, alertDate: Date, alertTime: String) {
         viewModelScope.launch {
-            // Get coordinates for the city to avoid "City Not Found" errors in the worker
+            //  avoid "City Not Found" in the worker
             var lat = 0.0
             var lon = 0.0
             try {

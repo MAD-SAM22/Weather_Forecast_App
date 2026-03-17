@@ -79,8 +79,7 @@ dependencies {
 
     // Unit Testing
     testImplementation(libs.junit)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.androidx.arch.core.testing)
@@ -94,6 +93,7 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.mockk.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)

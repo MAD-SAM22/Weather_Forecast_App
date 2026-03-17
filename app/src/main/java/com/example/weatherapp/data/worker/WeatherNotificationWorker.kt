@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.weatherapp.MainActivity
+import com.example.weatherapp.R
 import com.example.weatherapp.data.repository.WeatherRepository
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -84,7 +85,7 @@ class WeatherNotificationWorker(
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Deep Link Intent
+        // Link Intent
         val intent = Intent(
             Intent.ACTION_VIEW,
             Uri.parse(if (isAlarm) "weazy://alarm/$title/$message" else "weazy://alerts"),
@@ -100,7 +101,7 @@ class WeatherNotificationWorker(
         )
 
         val builder = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.multi_weather)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(if (isAlarm) NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_DEFAULT)

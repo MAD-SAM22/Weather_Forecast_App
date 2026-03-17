@@ -9,6 +9,10 @@ import com.example.weatherapp.data.source.local.SettingsManager
 import com.example.weatherapp.data.source.local.WeatherDao
 import com.example.weatherapp.data.source.remote.LocationHelper
 import com.example.weatherapp.ui.utils.NetworkMonitor
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,9 +24,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import retrofit2.Response
 
@@ -33,19 +34,19 @@ class HomeViewModelTest {
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule()
 
-    @Mock
+    @MockK
     private lateinit var repository: WeatherRepository
 
-    @Mock
+    @MockK
     private lateinit var locationHelper: LocationHelper
 
-    @Mock
+    @MockK
     private lateinit var weatherDao: WeatherDao
 
-    @Mock
+    @MockK
     private lateinit var settingsManager: SettingsManager
 
-    @Mock
+    @MockK
     private lateinit var networkMonitor: NetworkMonitor
 
     private lateinit var viewModel: HomeViewModel
@@ -54,17 +55,16 @@ class HomeViewModelTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
+        MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
 
-        // Mock settings manager flows
-        `when`(settingsManager.tempUnits).thenReturn(MutableStateFlow("metric"))
-        `when`(settingsManager.windSpeedUnits).thenReturn(MutableStateFlow("m/s"))
-        `when`(settingsManager.language).thenReturn(MutableStateFlow("en"))
+        every { settingsManager.tempUnits } returns MutableStateFlow("metric")
+        every { settingsManager.windSpeedUnits } returns MutableStateFlow("m/s")
+        every { settingsManager.language } returns MutableStateFlow("en")
         
         // Mock network monitor and dao flows used in init
-        `when`(networkMonitor.isOnline).thenReturn(flowOf(true))
-        `when`(weatherDao.getCurrentWeather()).thenReturn(flowOf(null))
+        every { networkMonitor.isOnline } returns flowOf(true)
+        every { weatherDao.getCurrentWeather() } returns flowOf(null)
 
         viewModel = HomeViewModel(
             repository, locationHelper, weatherDao, settingsManager, networkMonitor)
@@ -86,8 +86,8 @@ class HomeViewModelTest {
             dt = 1710000000L,
             timezone = 0
         )
-        `when`(repository.getWeatherByCity(cityName)).thenReturn(Response.success(weatherModel))
-        `when`(repository.getForecastByCity(cityName)).thenReturn(Response.success(null))
+        coEvery { repository.getWeatherByCity(cityName) } returns Response.success(weatherModel)
+        coEvery { repository.getForecastByCity(cityName) } returns Response.success(null)
 
         viewModel.fetchWeatherData(cityName)
 
