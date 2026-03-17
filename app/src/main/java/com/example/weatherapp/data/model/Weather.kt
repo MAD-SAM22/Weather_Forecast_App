@@ -1,5 +1,6 @@
 package com.example.weatherapp.data.model
 
+import com.google.gson.annotations.SerializedName
 data class CurrentWeatherModel(
     val main: MainData,
     val weather: List<WeatherDescription>,
@@ -40,8 +41,9 @@ data class SysData(
 )
 
 data class RainData(
-    @com.google.gson.annotations.SerializedName("1h")
+
+    @SerializedName("1h")
     val oneHour: Double? = null,
-    @com.google.gson.annotations.SerializedName("3h")
+    @SerializedName("3h")
     val threeHour: Double? = null
 )

@@ -8,8 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
@@ -35,9 +37,11 @@ import com.example.weatherapp.R
 import com.example.weatherapp.ui.home.components.AddCityDialog
 import com.example.weatherapp.ui.home.components.ForecastCard
 import com.example.weatherapp.ui.home.components.MapSelectionDialog
+import com.example.weatherapp.ui.home.components.WeatherDetailsSection
 import com.example.weatherapp.ui.utils.WeatherMapper
 import org.osmdroid.util.GeoPoint
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
@@ -72,9 +76,101 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
+        val bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.PartiallyExpanded,
+            skipHiddenState = true
+        )
+        val scaffoldState = rememberBottomSheetScaffoldState(
+            bottomSheetState = bottomSheetState
+        )
+
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 340.dp,
+            containerColor = Color.Transparent,
+            sheetContainerColor = Color.Transparent,
+            sheetDragHandle = null,
+            sheetShadowElevation = 0.dp,
+            sheetContent = {
+            // Expanded Bottom Sheet Content
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFF3E3C6E).copy(alpha = 0.8f), Color(0xFF2E335A))
+                        ),
+                        shape = RoundedCornerShape(topStart = 44.dp, topEnd = 44.dp)
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // Drag Handle
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .width(48.dp)
+                            .height(5.dp)
+                            .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    // Forecast Section
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 25.dp, start = 32.dp, end = 32.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = stringResource(R.string.hourly_forecast),
+                            color = if (isHourly) Color.White else Color.White.copy(alpha = 0.6f),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { viewModel.toggleForecastType(true) }
+                        )
+                        Text(
+                            text = stringResource(R.string.weekly_forecast),
+                            color = if (!isHourly) Color.White else Color.White.copy(alpha = 0.6f),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { viewModel.toggleForecastType(false) }
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(top = 12.dp),
+                        thickness = 0.5.dp,
+                        color = Color.White.copy(alpha = 0.2f)
+                    )
+
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(forecastData) { item ->
+                            ForecastCard(item)
+                        }
+                    }
+
+                    // Extra Details (Air Quality, UV Index, etc.)
+                    WeatherDetailsSection(weather = weather)
+                    
+                    Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom bar
+                }
+            }
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -156,77 +252,14 @@ fun HomeScreen(
             
             Spacer(modifier = Modifier.weight(1f))
         }
+    }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(340.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFF3E3C6E).copy(alpha = 0.8f), Color(0xFF2E335A))
-                    ),
-                    shape = RoundedCornerShape(topStart = 44.dp, topEnd = 44.dp)
-                )
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 10.dp)
-                    .width(48.dp)
-                    .height(5.dp)
-                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-                    .align(Alignment.TopCenter)
-            )
-
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 25.dp, start = 32.dp, end = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.hourly_forecast),
-                        color = if (isHourly) Color.White else Color.White.copy(alpha = 0.6f),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable { viewModel.toggleForecastType(true) }
-                    )
-                    Text(
-                        text = stringResource(R.string.weekly_forecast),
-                        color = if (!isHourly) Color.White else Color.White.copy(alpha = 0.6f),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable { viewModel.toggleForecastType(false) }
-                    )
-                }
-                
-                HorizontalDivider(
-                    modifier = Modifier.padding(top = 12.dp),
-                    thickness = 0.5.dp,
-                    color = Color.White.copy(alpha = 0.2f)
-                )
-
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(forecastData) { item ->
-                        ForecastCard(item)
-                    }
-                }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(100.dp)
-        ) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .height(100.dp)
+    ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()

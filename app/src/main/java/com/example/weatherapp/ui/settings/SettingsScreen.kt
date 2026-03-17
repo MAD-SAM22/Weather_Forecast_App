@@ -1,11 +1,16 @@
 package com.example.weatherapp.ui.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,10 +36,26 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF2E335A), Color(0xFF1C1B33))
+                    colors = listOf(
+                        Color(0xFF2E335A),
+                        Color(0xFF1C1B33)
+                    )
                 )
             )
     ) {
+        // Background decorative glow
+        Box(
+            modifier = Modifier
+                .offset(x = (-100).dp, y = (-50).dp)
+                .size(300.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF48319D).copy(alpha = 0.4f), Color.Transparent)
+                    ),
+                    shape = CircleShape
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -44,71 +65,90 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = "Back",
                         tint = Color.White,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+                
+                Spacer(modifier = Modifier.width(20.dp))
+                
                 Text(
                     text = "Settings",
                     color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 // Language Setting
-                SettingsSection(title = "Language") {
+                SettingsCard(
+                    title = "Language",
+                    subtitle = "Select your preferred language"
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        SettingChip(
+                        SettingOption(
                             text = "English",
                             selected = currentLanguage == "en",
+                            modifier = Modifier.weight(1f),
                             onClick = { viewModel.setLanguage("en") }
                         )
-                        SettingChip(
+                        SettingOption(
                             text = "العربية",
                             selected = currentLanguage == "ar",
+                            modifier = Modifier.weight(1f),
                             onClick = { viewModel.setLanguage("ar") }
                         )
                     }
                 }
 
                 // Units Setting
-                SettingsSection(title = "Units") {
+                SettingsCard(
+                    title = "Units",
+                    subtitle = "Measurement system for temperature and wind"
+                ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(
+                        SettingOption(
+                            text = "Metric (°C, m/s)",
+                            selected = currentUnits == "metric",
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            SettingChip(
-                                text = "Metric (°C, m/s)",
-                                selected = currentUnits == "metric",
-                                onClick = { viewModel.setUnits("metric") }
-                            )
-                            SettingChip(
-                                text = "Imperial (°F, mph)",
-                                selected = currentUnits == "imperial",
-                                onClick = { viewModel.setUnits("imperial") }
-                            )
-                        }
-                        SettingChip(
+                            onClick = { viewModel.setUnits("metric") }
+                        )
+                        SettingOption(
+                            text = "Imperial (°F, mph)",
+                            selected = currentUnits == "imperial",
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { viewModel.setUnits("imperial") }
+                        )
+                        SettingOption(
                             text = "Standard (K)",
                             selected = currentUnits == "standard",
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = { viewModel.setUnits("standard") }
                         )
                     }
@@ -119,33 +159,81 @@ fun SettingsScreen(
 }
 
 @Composable
-fun SettingsSection(title: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = title,
-            color = Color.White.copy(alpha = 0.6f),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-        content()
+fun SettingsCard(
+    title: String,
+    subtitle: String,
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = subtitle,
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+                .padding(16.dp)
+        ) {
+            content()
+        }
     }
 }
 
 @Composable
-fun SettingChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
+fun SettingOption(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) Color(0xFF48319D) else Color.White.copy(alpha = 0.05f),
+        animationSpec = tween(300),
+        label = "backgroundColor"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) Color(0xFF48319D).copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+        animationSpec = tween(300),
+        label = "borderColor"
+    )
+
+    Row(
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) Color(0xFF48319D) else Color.White.copy(alpha = 0.1f))
+            .background(backgroundColor)
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = text,
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            color = if (selected) Color.White else Color.White.copy(alpha = 0.8f),
+            fontSize = 16.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )
+        
+        if (selected) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }

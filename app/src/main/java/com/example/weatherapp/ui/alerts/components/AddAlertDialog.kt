@@ -2,10 +2,12 @@ package com.example.weatherapp.ui.alerts.components
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
@@ -39,52 +42,109 @@ fun AddAlertDialog(
     var selectedDate by remember { mutableStateOf(calendar.time) }
     var selectedTime by remember { mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.add_weather_alert)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(32.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = com.example.weatherapp.ui.theme.LightBackgroundGradientEnd
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.add_weather_alert),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = com.example.weatherapp.ui.theme.LightTextPrimary
+                )
+
                 OutlinedTextField(
                     value = cityName,
                     onValueChange = {
                         cityName = it
                         onSearch(it)
                     },
-                    label = { Text(stringResource(R.string.city_name)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    label = { Text(stringResource(R.string.city_name)) },
+                    placeholder = { Text("Search City...", color = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.6f)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = com.example.weatherapp.ui.theme.PrimaryPurple) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = com.example.weatherapp.ui.theme.PrimaryPurple,
+                        unfocusedBorderColor = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.2f),
+                        cursorColor = com.example.weatherapp.ui.theme.PrimaryPurple,
+                        focusedLabelColor = com.example.weatherapp.ui.theme.PrimaryPurple,
+                        unfocusedLabelColor = com.example.weatherapp.ui.theme.LightTextSecondary
+                    )
                 )
 
                 if (searchResults.isNotEmpty()) {
-                    LazyColumn(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 150.dp)
+                            .heightIn(max = 200.dp)
+                            .background(
+                                color = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.05f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(4.dp)
                     ) {
-                        items(searchResults) { city ->
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { 
-                                        cityName = city.name
-                                        onSearch("") // clear results
-                                    }
-                                    .padding(vertical = 8.dp, horizontal = 4.dp)
-                            ) {
-                                Text("${city.name}, ${city.country}", fontSize = 14.sp)
+                        LazyColumn {
+                            items(searchResults) { city ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { 
+                                            cityName = city.name
+                                            onSearch("") // clear results
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "${city.name}, ${city.country}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = com.example.weatherapp.ui.theme.LightTextPrimary
+                                    )
+                                }
+                                if (searchResults.last() != city) {
+                                    HorizontalDivider(
+                                        thickness = 0.5.dp,
+                                        color = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.1f)
+                                    )
+                                }
                             }
-                            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                         }
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = alertType == "Notification", onClick = { alertType = "Notification" })
-                    Text(stringResource(R.string.notification))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    RadioButton(selected = alertType == "Alarm", onClick = { alertType = "Alarm" })
-                    Text(stringResource(R.string.alarm))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    RadioButton(
+                        selected = alertType == "Notification",
+                        onClick = { alertType = "Notification" },
+                        colors = RadioButtonDefaults.colors(selectedColor = com.example.weatherapp.ui.theme.PrimaryPurple)
+                    )
+                    Text(stringResource(R.string.notification), color = com.example.weatherapp.ui.theme.LightTextPrimary)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    RadioButton(
+                        selected = alertType == "Alarm",
+                        onClick = { alertType = "Alarm" },
+                        colors = RadioButtonDefaults.colors(selectedColor = com.example.weatherapp.ui.theme.PrimaryPurple)
+                    )
+                    Text(stringResource(R.string.alarm), color = com.example.weatherapp.ui.theme.LightTextPrimary)
                 }
 
                 Button(
@@ -100,11 +160,16 @@ fun AddAlertDialog(
                             calendar.get(Calendar.DAY_OF_MONTH)
                         ).show()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.1f))
                 ) {
-                    Icon(Icons.Default.DateRange, contentDescription = null)
+                    Icon(Icons.Default.DateRange, contentDescription = null, tint = com.example.weatherapp.ui.theme.PrimaryPurple)
                     Spacer(Modifier.width(8.dp))
-                    Text(SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(selectedDate))
+                    Text(
+                        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(selectedDate),
+                        color = com.example.weatherapp.ui.theme.LightTextPrimary
+                    )
                 }
 
                 Button(
@@ -119,25 +184,41 @@ fun AddAlertDialog(
                             true
                         ).show()
                     },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = com.example.weatherapp.ui.theme.LightTextSecondary.copy(alpha = 0.1f))
+                ) {
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = com.example.weatherapp.ui.theme.PrimaryPurple)
+                    Spacer(Modifier.width(8.dp))
+                    Text(selectedTime, color = com.example.weatherapp.ui.theme.LightTextPrimary)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { 
+                        if (cityName.isNotBlank()) onConfirm(cityName, alertType, selectedDate, selectedTime) 
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = com.example.weatherapp.ui.theme.PrimaryPurple)
+                ) {
+                    Text(stringResource(R.string.add), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                TextButton(
+                    onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(selectedTime)
+                    Text(
+                        stringResource(R.string.cancel),
+                        color = com.example.weatherapp.ui.theme.LightTextSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { 
-                if (cityName.isNotBlank()) onConfirm(cityName, alertType, selectedDate, selectedTime) 
-            }) {
-                Text(stringResource(R.string.add))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
         }
-    )
+    }
 }
