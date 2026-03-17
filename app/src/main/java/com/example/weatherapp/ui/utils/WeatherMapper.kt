@@ -69,7 +69,7 @@ object WeatherMapper {
                 }
                 WeatherTheme(
                     bgImage = "bg/storm_bar2.jpg",
-                    houseImage = if (isNight) "houses/morning_or_night.png" else "houses/morning2.png",
+                    houseImage = if (isNight) "houses/morning_or_night.png" else "houses/morning3.png",
                     iconImage = icon
                 )
             }
@@ -86,23 +86,23 @@ object WeatherMapper {
 
                     when {
                         hour in 6..10 -> WeatherTheme("bg/morning.jpg", "houses/morning.png", icon)
-                        hour in 11..16 -> WeatherTheme("bg/midday.jpg", "houses/morning2.png", icon)
-                        hour in 17..18 -> WeatherTheme("bg/morning2.jpg", "houses/morning3.png", icon)
-                        else -> WeatherTheme(if (hour in 19..22) "bg/night.jpg" else "bg/night2.jpg", "houses/night.png", icon)
+                        hour in 11..16 -> WeatherTheme("bg/night2.jpg", "houses/morning_or_night.png", icon)
+                        hour in 17..18 -> WeatherTheme("bg/basic_morning_house.jpg", "houses/morning3.png", icon)
+                        else -> WeatherTheme(if (hour in 19..22) "bg/night.jpg" else "bg/night2.jpg", "houses/warm_snaw.png", icon)
                     }
                 } else { // Clouds
                     when {
                         hour in 6..18 -> {
                             WeatherTheme(
                                 bgImage = if (hour in 11..16) "bg/midday.jpg" else "bg/morning.jpg",
-                                houseImage = "houses/morning2.png",
+                                houseImage = "houses/basic_morning_house.png",
                                 iconImage = "icons/cloudy_sun.png"
                             )
                         }
                         else -> {
                             WeatherTheme(
                                 bgImage = if (hour in 19..22) "bg/night.jpg" else "bg/night2.jpg",
-                                houseImage = "houses/night.png",
+                                houseImage = "houses/morning_or_night.png",
                                 iconImage = "icons/scoudy_night.png"
                             )
                         }

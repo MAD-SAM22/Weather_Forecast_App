@@ -16,7 +16,7 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/multi_weather"
+        android:icon="@drawable/weather_app_logo_3d"
         android:label="@string/app_name"
         android:roundIcon="@drawable/weather_app_logo_3d"
         android:supportsRtl="true"
